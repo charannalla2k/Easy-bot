@@ -5,6 +5,7 @@ import { use } from "react";
 import Link from "next/link";
 import SceneLayout from "@/components/SceneLayout";
 import AnimatedSection from "@/components/AnimatedSection";
+import StepVisual from "@/components/visuals/StepVisual";
 import { steps } from "@/data/knowledge-base";
 
 const stepRoutes: Record<string, number> = {
@@ -123,8 +124,13 @@ export default function FlowStepPage({ params }: PageProps) {
         ))}
       </AnimatedSection>
 
+      {/* Interactive Visual Demo */}
+      <AnimatedSection delay={0.35} className="mt-10 w-full max-w-4xl">
+        <StepVisual step={slug} showApproval={step.humanGate} />
+      </AnimatedSection>
+
       {/* Content cards */}
-      <AnimatedSection delay={0.4} className="mt-12 w-full max-w-4xl">
+      <AnimatedSection delay={0.5} className="mt-12 w-full max-w-4xl">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {/* What happens */}
           <div className="glass-card p-6">
@@ -155,7 +161,7 @@ export default function FlowStepPage({ params }: PageProps) {
       </AnimatedSection>
 
       {/* Data transparency mini */}
-      <AnimatedSection delay={0.5} className="mt-4 w-full max-w-4xl">
+      <AnimatedSection delay={0.6} className="mt-4 w-full max-w-4xl">
         <div className="glass-card p-5">
           <h3 className="text-[10px] font-bold text-white/60 uppercase tracking-wider mb-3">Data Used in This Step</h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
@@ -182,7 +188,7 @@ export default function FlowStepPage({ params }: PageProps) {
       </AnimatedSection>
 
       {/* Step Navigation */}
-      <AnimatedSection delay={0.6} className="mt-14 mb-4 flex items-center justify-center gap-4 w-full">
+      <AnimatedSection delay={0.7} className="mt-14 mb-4 flex items-center justify-center gap-4 w-full">
         <Link
           href={prevRoute}
           className="group inline-flex items-center gap-2 px-6 py-3 rounded-full glass-card text-sm font-medium text-white/75 hover:text-white hover:bg-white/10 transition-all duration-300"
