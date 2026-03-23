@@ -1,5 +1,7 @@
 "use client";
 
+import { useEffect } from "react";
+import { usePathname } from "next/navigation";
 import { motion } from "framer-motion";
 import { ReactNode } from "react";
 
@@ -14,13 +16,20 @@ export default function SceneLayout({
   gradient = "from-[#06060a] via-[#0a0a1a] to-[#06060a]",
   className = "",
 }: SceneLayoutProps) {
+  const pathname = usePathname();
+
+  // Scroll to top on every page navigation
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [pathname]);
+
   return (
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-      className={`relative min-h-screen flex flex-col items-center justify-center overflow-hidden bg-gradient-to-br ${gradient} ${className}`}
+      className={`relative min-h-screen flex flex-col items-center overflow-hidden bg-gradient-to-br ${gradient} ${className}`}
     >
       {/* Ambient orbs */}
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
@@ -32,7 +41,7 @@ export default function SceneLayout({
       <div className="noise pointer-events-none absolute inset-0" />
 
       {/* Content */}
-      <div className="relative z-10 w-full max-w-6xl mx-auto px-4 sm:px-6 md:px-12 pt-28 pb-12 flex flex-col items-center justify-center min-h-screen">
+      <div className="relative z-10 w-full max-w-6xl mx-auto px-4 sm:px-6 md:px-12 pt-28 pb-12 flex flex-col items-center min-h-screen">
         {children}
       </div>
     </motion.div>
