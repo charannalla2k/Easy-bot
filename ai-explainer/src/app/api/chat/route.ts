@@ -19,7 +19,7 @@ function isRateLimited(ip: string): boolean {
 }
 
 // ---------- Input sanitisation ----------
-const MAX_MESSAGE_LENGTH = 500;
+const MAX_MESSAGE_LENGTH = 1000;
 const VALID_VIEW_MODES: ViewMode[] = ["client", "advisor", "technical"];
 
 function sanitizeInput(raw: string): string {
@@ -84,25 +84,33 @@ export async function POST(req: NextRequest) {
         .join("\n");
       const allStepNames = steps.map((s, i) => `Phase ${i}: ${s.title}`).join(", ");
 
-      systemPrompt = `You explain the "${appContext.name}" application. Currently on Phase ${safeStepId}: "${step.title}".
+      systemPrompt = `You are a helpful AI assistant for the "${appContext.name}" application. The user is currently on Phase ${safeStepId}: "${step.title}".
 
 APP: ${appContext.description}
-STEP: ${content.description}
+CURRENT STEP: ${content.description}
 WHAT HAPPENS: ${content.whatHappens}
 SYSTEM/AI: ${content.systemInvolvement}
 DATA:\n${dataDetails}
 ALL PHASES: ${allStepNames}
 
-RULES: Answer ONLY from above context. Keep responses to 2-3 sentences max. If question is about a different phase, say: "That's covered in another part of the walkthrough — navigate there to learn more."`;
+GUIDELINES:
+- Prioritize the walkthrough context above when answering, but feel free to provide helpful information on any topic.
+- If a question is about a different phase, give a brief helpful answer and mention which phase covers it in more detail (e.g. "Great question! Here's the gist: ... You can explore this deeper in Phase X of our walkthrough.").
+- If a question is unrelated to the app, give a concise helpful answer and gently steer back (e.g. "That's a great question! ... By the way, if you're curious about how our app handles [related topic], check out the walkthrough!").
+- Be friendly, informative, and conversational.`;
     } else {
       const sceneCtx = sceneDescriptions[scene] || sceneDescriptions.general;
-      systemPrompt = `You explain the "${appContext.name}" application. Currently on the "${scene}" scene.
+      systemPrompt = `You are a helpful AI assistant for the "${appContext.name}" application. The user is currently on the "${scene}" scene.
 
 APP: ${appContext.description}
 SCENE CONTEXT: ${sceneCtx}
 KEY DIFFERENTIATORS: ${appContext.keyDifferentiators.join("; ")}
 
-RULES: Answer ONLY from above context. Keep responses to 2-3 sentences max. If question is about a specific flow step, say: "That's covered in another part of the walkthrough — navigate there to learn more."`;
+GUIDELINES:
+- Prioritize the walkthrough context above when answering, but feel free to provide helpful information on any topic.
+- If a question relates to a specific flow step, give a brief helpful answer and suggest navigating to that step for the full picture.
+- If a question is unrelated to the app, give a concise helpful answer and gently steer back (e.g. "That's a great question! ... By the way, our walkthrough covers [related topic] if you're interested!").
+- Be friendly, informative, and conversational.`;
     }
 
     // Try Groq first, then OpenAI, then fallback
@@ -125,8 +133,8 @@ RULES: Answer ONLY from above context. Keep responses to 2-3 sentences max. If q
             },
             body: JSON.stringify({
               model: process.env.GROQ_MODEL || "llama-3.1-8b-instant",
-              temperature: 0,
-              max_tokens: 200,
+              temperature: 0.3,
+              max_tokens: 600,
               messages: [
                 { role: "system", content: systemPrompt },
                 { role: "user", content: safeMessage },
@@ -157,9 +165,8 @@ RULES: Answer ONLY from above context. Keep responses to 2-3 sentences max. If q
             },
             body: JSON.stringify({
               model: process.env.OPENAI_MODEL || "gpt-4o-mini",
-              temperature: 0,
-              seed: 42,
-              max_tokens: 200,
+              temperature: 0.3,
+              max_tokens: 600,
               messages: [
                 { role: "system", content: systemPrompt },
                 { role: "user", content: safeMessage },
