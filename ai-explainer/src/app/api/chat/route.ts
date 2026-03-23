@@ -109,56 +109,72 @@ RULES: Answer ONLY from above context. Keep responses to 2-3 sentences max. If q
     const groqKey = process.env.GROQ_API_KEY;
     const openaiKey = process.env.OPENAI_API_KEY;
 
+    if (!groqKey && !openaiKey) {
+      console.warn("Chat API: No GROQ_API_KEY or OPENAI_API_KEY configured");
+    }
+
     if (groqKey) {
-      const response = await fetch(
-        "https://api.groq.com/openai/v1/chat/completions",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${groqKey}`,
-          },
-          body: JSON.stringify({
-            model: process.env.GROQ_MODEL || "llama-3.1-8b-instant",
-            temperature: 0,
-            max_tokens: 200,
-            messages: [
-              { role: "system", content: systemPrompt },
-              { role: "user", content: safeMessage },
-            ],
-          }),
+      try {
+        const response = await fetch(
+          "https://api.groq.com/openai/v1/chat/completions",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${groqKey}`,
+            },
+            body: JSON.stringify({
+              model: process.env.GROQ_MODEL || "llama-3.1-8b-instant",
+              temperature: 0,
+              max_tokens: 200,
+              messages: [
+                { role: "system", content: systemPrompt },
+                { role: "user", content: safeMessage },
+              ],
+            }),
+          }
+        );
+        if (response.ok) {
+          const data = await response.json();
+          return NextResponse.json({ reply: data.choices[0].message.content });
         }
-      );
-      if (response.ok) {
-        const data = await response.json();
-        return NextResponse.json({ reply: data.choices[0].message.content });
+        const errBody = await response.text();
+        console.error(`Groq API error ${response.status}: ${errBody}`);
+      } catch (err) {
+        console.error("Groq API fetch failed:", err);
       }
     }
 
     if (openaiKey) {
-      const response = await fetch(
-        "https://api.openai.com/v1/chat/completions",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${openaiKey}`,
-          },
-          body: JSON.stringify({
-            model: process.env.OPENAI_MODEL || "gpt-4o-mini",
-            temperature: 0,
-            seed: 42,
-            max_tokens: 200,
-            messages: [
-              { role: "system", content: systemPrompt },
-              { role: "user", content: safeMessage },
-            ],
+      try {
+        const response = await fetch(
+          "https://api.openai.com/v1/chat/completions",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${openaiKey}`,
+            },
+            body: JSON.stringify({
+              model: process.env.OPENAI_MODEL || "gpt-4o-mini",
+              temperature: 0,
+              seed: 42,
+              max_tokens: 200,
+              messages: [
+                { role: "system", content: systemPrompt },
+                { role: "user", content: safeMessage },
+              ],
           }),
         }
-      );
-      if (response.ok) {
-        const data = await response.json();
-        return NextResponse.json({ reply: data.choices[0].message.content });
+        );
+        if (response.ok) {
+          const data = await response.json();
+          return NextResponse.json({ reply: data.choices[0].message.content });
+        }
+        const errBody = await response.text();
+        console.error(`OpenAI API error ${response.status}: ${errBody}`);
+      } catch (err) {
+        console.error("OpenAI API fetch failed:", err);
       }
     }
 
