@@ -26,14 +26,6 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  // Scroll to top on route change
-  const pathname = usePathname();
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      window.scrollTo(0, 0);
-    }
-  }, [pathname]);
-
   return (
     <html
       lang="en"
